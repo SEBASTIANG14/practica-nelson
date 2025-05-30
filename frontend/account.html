@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Transacciones</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <a href="/frontend/" style="display: block; text-align: center; margin-bottom: 1rem; color: #ff9bd2;">← Volver al inicio</a>
+
+  <h1></h1>
+
+  <section class="resultado" id="balance"></section>
+  <div id="error"></div>
+
+  <section>
+    <label for="quantity">Cantidad</label>
+    <input type="number" id="quantity" value="123" placeholder="Ingresa cantidad" />
+
+    <label for="sucursal">Sucursal</label>
+    <select id="sucursal" style="width: 100%; padding: 0.6rem; border-radius: 6px; background-color: #3a3a3c; color: #f0f0f0; border: none; margin-bottom: 1rem;">
+      <option value="chametla">Chametla</option>
+      <option value="cdmx">CDMX</option>
+      <option value="centenario">Centenario</option>
+    </select>
+
+    <div style="display: flex; gap: 1rem;">
+      <button onclick="trans('withdraw')" class="retirar">Retirar</button>
+      <button onclick="trans('deposit')" class="depositar">Depositar</button>
+    </div>
+  </section>
+
+  <script>
+    const params = new URL(document.location.toString()).searchParams;
+    const account = params.get("cuenta");
+    const curp = params.get("curp");
+    const h1 = document.querySelector('h1');
+    const balance = document.getElementById('balance');
+    const error = document.getElementById('error');
+    const sucursal = document.getElementById('sucursal');
+
+    async function get_profile() {
+      const acc_data = await fetch(`http://25.2.129.231:3000/accounts/${curp}`);
+      const json = await acc_data.json();
+      h1.textContent = json.cliente;
+      balance.textContent = `Saldo actual: $${json.saldo}`;
+    }
+
+    async function trans(action) {
+      const quantity = parseInt(document.getElementById("quantity").value);
+      const response = await fetch(`http://25.2.129.231:3000/transactions`, {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          account,
+          action,
+          quantity,
+          sucursal: sucursal.value
+        })
+      });
+
+      if (!response.ok) {
+        const json = await response.json();
+        error.innerHTML = `<div class="resultado" style="background-color: #ff3b30; border-color: #c62828;">${json.error}</div>`;
+      } else {
+        error.innerHTML = ``;
+        window.location.reload();
+      }
+    }
+
+    get_profile();
+  </script>
+</body>
+
+</html>
